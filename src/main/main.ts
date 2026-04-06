@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";
 import { app, BrowserWindow, clipboard, dialog, ipcMain } from "electron";
 import { autoUpdater } from "electron-updater";
-import { addSnippet, exportSnippets, getSnippetById, importSnippets, listSnippets, recordUsage, removeSnippet, renameGroup, searchSnippets, toggleFavorite, updateSnippet } from "./store";
+import { addSnippet, exportSnippets, getSnippetById, importSnippets, listSnippets, normalizeImportedItems, recordUsage, removeSnippet, renameGroup, searchSnippets, toggleFavorite, updateSnippet } from "./store";
 import type { SnippetInput, SnippetItem } from "../shared/types";
 
 const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
@@ -137,10 +137,10 @@ function registerIpc(): void {
     try {
       const filePath = result.filePaths[0]!;
       const data = readFileSync(filePath, "utf8");
-      const snippets = JSON.parse(data) as SnippetItem[];
-
-      if (!Array.isArray(snippets)) {
-        throw new Error("Invalid file format: expected array of snippets");
+      const parsed = JSON.parse(data) as unknown;
+      const snippets = normalizeImportedItems(parsed);
+      if (snippets.length === 0) {
+        throw new Error("No valid snippets found in import file");
       }
 
       return importSnippets(snippets, mode);

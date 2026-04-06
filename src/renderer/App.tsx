@@ -38,6 +38,7 @@ export function App() {
   const [form, setForm] = useState<FormState>(initialForm);
   const [groupFilter, setGroupFilter] = useState("all");
   const [message, setMessage] = useState("Ready");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameOldGroup, setRenameOldGroup] = useState("");
@@ -130,8 +131,12 @@ export function App() {
     await refresh();
   }
 
-  async function onCopy(content: string): Promise<void> {
+  async function onCopy(content: string, snippetId?: string): Promise<void> {
     await window.termvault.copySnippetContent(content);
+    if (snippetId) {
+      setCopiedId(snippetId);
+      setTimeout(() => setCopiedId((current) => (current === snippetId ? null : current)), 900);
+    }
     setMessage("Copied to clipboard. Paste in terminal to run.");
   }
 
@@ -145,7 +150,7 @@ export function App() {
 
   async function onCopyAndRecord(id: string, content: string): Promise<void> {
     await window.termvault.recordUsage(id);
-    await onCopy(content);
+    await onCopy(content, id);
   }
 
   async function onDelete(id: string): Promise<void> {
@@ -267,21 +272,27 @@ export function App() {
           )}
         </form>
 
-        <button className="link" onClick={() => setShowRenameModal(true)}>
-          Rename Group
-        </button>
+        <div className="panel-actions">
+          <div className="action-group">
+            <div className="action-title">Manage</div>
+            <button className="link" onClick={() => setShowRenameModal(true)}>
+              Rename Group
+            </button>
+          </div>
 
-        <button className="link" onClick={onExport}>
-          Export All
-        </button>
-
-        <button className="link" onClick={() => onImport("merge")}>
-          Import (Merge)
-        </button>
-
-        <button className="link" onClick={() => onImport("replace")}>
-          Import (Replace)
-        </button>
+          <div className="action-group action-group-border">
+            <div className="action-title">Backup</div>
+            <button className="link" onClick={onExport}>
+              Export All
+            </button>
+            <button className="link" onClick={() => onImport("merge")}>
+              Import (Merge)
+            </button>
+            <button className="link" onClick={() => onImport("replace")}>
+              Import (Replace)
+            </button>
+          </div>
+        </div>
 
         <div className="status">{message}</div>
       </aside>
@@ -361,8 +372,12 @@ export function App() {
                 )}
               </div>
               <div className="actions">
-                <button type="button" onClick={() => onCopyAndRecord(item.content, item.id)}>
-                  Copy
+                <button
+                  type="button"
+                  className={copiedId === item.id ? "copied" : ""}
+                  onClick={() => onCopyAndRecord(item.id, item.content)}
+                >
+                  {copiedId === item.id ? "Copied!" : "Copy"}
                 </button>
                 <button type="button" onClick={() => onEdit(item)}>
                   Edit
