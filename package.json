@@ -15,7 +15,11 @@
     "typecheck": "tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit",
     "dist": "npm run build && electron-builder",
     "dist:mac": "npm run build && electron-builder -m",
+    "dist:mac:arm64": "npm run build && electron-builder -m --arm64",
+    "dist:mac:x64": "npm run build && electron-builder -m --x64",
     "dist:win": "npm run build && electron-builder -w",
+    "dist:win:arm64": "npm run build && electron-builder -w --arm64",
+    "dist:win:x64": "npm run build && electron-builder -w --x64",
     "dist:all": "npm run build && electron-builder -mw"
   },
   "repository": {
@@ -36,6 +40,7 @@
   },
   "homepage": "https://github.com/CodeAIX/TermVault#readme",
   "dependencies": {
+    "electron-updater": "^6.8.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
@@ -62,12 +67,21 @@
       "dist/**/*",
       "package.json"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "CodeAIX",
+      "repo": "TermVault"
+    },
     "mac": {
       "target": [
         "dmg",
         "zip"
       ],
-      "category": "public.app-category.utilities"
+      "category": "public.app-category.utilities",
+      "arch": [
+        "arm64",
+        "x64"
+      ]
     },
     "dmg": {
       "contents": [
@@ -87,6 +101,10 @@
       "target": [
         "nsis",
         "portable"
+      ],
+      "arch": [
+        "arm64",
+        "x64"
       ]
     },
     "nsis": {

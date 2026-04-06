@@ -1,10 +1,14 @@
 import { join } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";
 import { app, BrowserWindow, clipboard, dialog, ipcMain } from "electron";
+import { autoUpdater } from "electron-updater";
 import { addSnippet, exportSnippets, getSnippetById, importSnippets, listSnippets, recordUsage, removeSnippet, renameGroup, searchSnippets, toggleFavorite, updateSnippet } from "./store";
 import type { SnippetInput, SnippetItem } from "../shared/types";
 
 const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
+
+// Configure auto-updater
+autoUpdater.checkForUpdatesAndNotify();
 
 function createWindow(): void {
   const window = new BrowserWindow({
@@ -152,6 +156,11 @@ function registerIpc(): void {
 app.whenReady().then(() => {
   registerIpc();
   createWindow();
+
+  // Check for updates after app is ready
+  if (!DEV_SERVER_URL) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {

@@ -9,6 +9,23 @@
   --danger: #a32424;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1515;
+    --panel: #2a2420;
+    --line: #48403a;
+    --ink: #e8dfd8;
+    --muted: #a89880;
+    --accent: #ff6b4a;
+    --accent-dark: #e55a2f;
+    --danger: #ff6b6b;
+  }
+
+  body {
+    background: linear-gradient(135deg, #1a1515 0%, #2a2420 100%);
+  }
+}
+
 * {
   box-sizing: border-box;
 }
