@@ -12,7 +12,11 @@
     "build:main": "tsc -p tsconfig.main.json",
     "build:renderer": "vite build",
     "start": "electron .",
-    "typecheck": "tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit"
+    "typecheck": "tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder -m",
+    "dist:win": "npm run build && electron-builder -w",
+    "dist:all": "npm run build && electron-builder -mw"
   },
   "repository": {
     "type": "git",
@@ -32,7 +36,6 @@
   },
   "homepage": "https://github.com/CodeAIX/TermVault#readme",
   "dependencies": {
-    "electron": "^41.1.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
@@ -43,8 +46,52 @@
     "@vitejs/plugin-react": "^6.0.1",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
+    "electron": "^41.1.1",
+    "electron-builder": "^26.8.1",
     "typescript": "^6.0.2",
     "vite": "^8.0.3",
     "wait-on": "^9.0.4"
+  },
+  "build": {
+    "appId": "com.codeix.termvault",
+    "productName": "TermVault",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.utilities"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
