@@ -12,20 +12,26 @@ jobs:
   release:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest]
         include:
           - os: macos-latest
             build-command: npm run dist:mac
+            upload-files: |
+              release/*.dmg
+              release/*.zip
           - os: windows-latest
             build-command: npm run dist:win
+            upload-files: |
+              release/*.exe
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -34,36 +40,15 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Build and create release (macOS)
-        if: runner.os == 'macos'
-        run: npm run dist:mac
+      - name: Build and create release
+        run: ${{ matrix.build-command }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and create release (Windows)
-        if: runner.os == 'windows'
-        run: npm run dist:win
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload release assets (macOS)
-        if: runner.os == 'macos'
+      - name: Upload release assets
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            release/*.dmg
-            release/*.zip
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload release assets (Windows)
-        if: runner.os == 'windows'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            release/*.exe
+          files: ${{ matrix.upload-files }}
           draft: false
           prerelease: false
         env:

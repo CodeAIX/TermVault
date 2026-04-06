@@ -7,9 +7,6 @@ import type { SnippetInput, SnippetItem } from "../shared/types";
 
 const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 
-// Configure auto-updater
-autoUpdater.checkForUpdatesAndNotify();
-
 function createWindow(): void {
   const window = new BrowserWindow({
     width: 1100,
@@ -159,7 +156,9 @@ app.whenReady().then(() => {
 
   // Check for updates after app is ready
   if (!DEV_SERVER_URL) {
-    autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.checkForUpdatesAndNotify().catch((error: unknown) => {
+      console.error("Auto-update check failed:", error);
+    });
   }
 
   app.on("activate", () => {
