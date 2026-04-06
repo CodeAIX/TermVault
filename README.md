@@ -1,133 +1,87 @@
 # TermVault
 
-TermVault is a terminal helper CLI to save and manage frequently used commands/code snippets.
+TermVault is a cross-platform desktop app (Electron) for collecting and managing terminal commands/snippets.
 
-## Features
+## Product Goal
 
-- Save command/snippet with a custom name.
-- Group snippets (for example: git, docker, deploy).
-- List snippets by group.
-- Copy snippet content to clipboard with one command.
-- Run a command snippet directly from CLI.
-- Interactive picker mode.
+- Manage frequently used commands/snippets in a GUI.
+- Organize snippets by groups.
+- One-click copy to clipboard, then paste into terminal to run.
+- Run on macOS, Windows, and Linux.
 
-## Quick Start
+## Scientific Development Plan
 
-1. Install dependencies:
+### Phase 1: Core Architecture (completed in this iteration)
+
+- Electron main process for desktop shell and secure IPC.
+- React renderer for GUI interaction.
+- Local JSON storage in userData directory.
+- Snippet CRUD: list/add/delete.
+- Group filter and one-click copy.
+
+### Phase 2: Product Reliability
+
+- Edit snippet and rename group.
+- Duplicate-name detection and UX prompts.
+- Export/import backup files.
+- Better validation and error recovery.
+
+### Phase 3: Power Features
+
+- Search and fuzzy match.
+- Favorites and recent snippets.
+- Optional global hotkey to open quick copy panel.
+
+### Phase 4: Distribution
+
+- Packaging for macOS/Windows/Linux.
+- Auto-update strategy and release workflow.
+
+## Tech Stack
+
+- Electron + TypeScript (main/preload)
+- React + Vite + TypeScript (renderer)
+- Local JSON file storage
+
+## Getting Started
+
+1. Install dependencies
 
 ```bash
 npm install
 ```
 
-2. Start in dev mode:
+2. Start development app
 
 ```bash
-npm run dev -- --help
+npm run dev
 ```
 
-3. Build:
+3. Build production assets
 
 ```bash
 npm run build
 ```
 
-4. Run built CLI:
+4. Run built app
 
 ```bash
-npm run start -- --help
+npm run start
 ```
 
 ## Usage
 
-Add a snippet:
-
-```bash
-npm run dev -- add -n "List files" -g "shell" -c "ls -la" -t command
-```
-
-List all snippets:
-
-```bash
-npm run dev -- list
-```
-
-List by group:
-
-```bash
-npm run dev -- list -g shell
-```
-
-Show all groups:
-
-```bash
-npm run dev -- groups
-```
-
-Copy snippet to clipboard:
-
-```bash
-npm run dev -- copy "List files"
-```
-
-Run snippet directly:
-
-```bash
-npm run dev -- run "List files"
-```
-
-Interactive mode:
-
-```bash
-npm run dev -- interactive
-```
-
-Remove snippet:
-
-```bash
-npm run dev -- remove "List files"
-```
-
-Show database path:
-
-```bash
-npm run dev -- path
-```
+1. Launch app.
+2. Fill Name, Group, Type, and Content.
+3. Click Save Snippet.
+4. Filter by group from dropdown.
+5. Click Copy on a snippet.
+6. Paste in terminal and press Enter.
 
 ## Data Storage
 
-By default, snippets are saved in:
+Snippets are saved in Electron user data path:
 
-- `~/.termvault/db.json`
-
-## Publish to GitHub (Step by Step)
-
-1. Initialize git:
-
-```bash
-git init
-```
-
-2. Commit:
-
-```bash
-git add .
-git commit -m "feat: initial termvault cli"
-```
-
-3. Create a GitHub repo in browser, then connect remote:
-
-```bash
-git remote add origin <YOUR_GITHUB_REPO_URL>
-```
-
-4. Push:
-
-```bash
-git branch -M main
-git push -u origin main
-```
-
-## Notes
-
-- `run` executes content in shell mode. Please only run trusted snippets.
-- If multiple snippets share same name, pass `-g <group>` to disambiguate.
+- macOS: `~/Library/Application Support/termvault/termvault-db.json` (actual app folder name may vary by app identity)
+- Windows: `%APPDATA%/termvault/termvault-db.json`
+- Linux: `~/.config/termvault/termvault-db.json`

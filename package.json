@@ -1,28 +1,50 @@
 {
-  "name": "code",
-  "version": "1.0.0",
-  "description": "Terminal snippets manager for commands and code blocks",
-  "main": "dist/index.js",
-  "bin": {
-    "termvault": "dist/index.js"
-  },
+  "name": "termvault",
+  "version": "0.1.0",
+  "description": "Cross-platform terminal helper app for snippet management and one-click copy",
+  "main": "dist/main/main.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsx src/index.ts",
-    "start": "node dist/index.js"
+    "dev": "concurrently -k \"npm:dev:main\" \"npm:dev:renderer\" \"npm:dev:electron\"",
+    "dev:main": "tsc -p tsconfig.main.json --watch",
+    "dev:renderer": "vite",
+    "dev:electron": "wait-on tcp:5173 dist/main/main.js && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .",
+    "build": "npm run build:main && npm run build:renderer",
+    "build:main": "tsc -p tsconfig.main.json",
+    "build:renderer": "vite build",
+    "start": "electron .",
+    "typecheck": "tsc -p tsconfig.main.json --noEmit && tsc -p tsconfig.renderer.json --noEmit"
   },
-  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeAIX/TermVault.git"
+  },
+  "keywords": [
+    "electron",
+    "terminal",
+    "snippet",
+    "clipboard"
+  ],
   "author": "",
-  "license": "ISC",
-  "type": "module",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/CodeAIX/TermVault/issues"
+  },
+  "homepage": "https://github.com/CodeAIX/TermVault#readme",
   "dependencies": {
-    "clipboardy": "^5.3.1",
-    "commander": "^14.0.3",
-    "inquirer": "^13.3.2"
+    "electron": "^41.1.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@types/node": "^25.5.2",
-    "tsx": "^4.21.0",
-    "typescript": "^6.0.2"
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.3",
+    "wait-on": "^9.0.4"
   }
 }
