@@ -65,6 +65,7 @@ export function addSnippet(input: SnippetInput): SnippetItem {
     group: input.group.trim(),
     content: input.content,
     type: input.type,
+    isFavorite: false,
     createdAt: now,
     updatedAt: now,
   };
@@ -148,4 +149,28 @@ export function searchSnippets(query: string): SnippetItem[] {
       return keywords.every((kw) => searchText.includes(kw));
     })
     .sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
+}
+
+export function toggleFavorite(id: string): boolean {
+  const db = readDb();
+  const item = db.snippets.find((s) => s.id === id);
+  if (!item) {
+    return false;
+  }
+
+  item.isFavorite = !item.isFavorite;
+  writeDb(db);
+  return true;
+}
+
+export function recordUsage(id: string): boolean {
+  const db = readDb();
+  const item = db.snippets.find((s) => s.id === id);
+  if (!item) {
+    return false;
+  }
+
+  item.lastUsed = new Date().toISOString();
+  writeDb(db);
+  return true;
 }

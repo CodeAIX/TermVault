@@ -130,6 +130,35 @@ button.link {
   max-width: 220px;
 }
 
+.toolbar-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.toolbar-btn {
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  width: auto;
+  transition: all 0.2s ease;
+}
+
+.toolbar-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.toolbar-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 .search-box {
   width: 100%;
   margin-bottom: 12px !important;
@@ -156,11 +185,39 @@ button.link {
   padding: 10px;
 }
 
+.snippet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
 .snippet-meta {
   display: flex;
   gap: 8px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.favorite-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  min-width: auto;
+  width: auto;
+  transition: all 0.2s ease;
+}
+
+.favorite-btn:hover {
+  color: var(--accent);
+}
+
+.favorite-btn.active {
+  color: var(--accent);
 }
 
 h3 {
@@ -175,6 +232,16 @@ pre {
   background: #fcf8f2;
   white-space: pre-wrap;
   word-break: break-word;
+  font-size: 12px;
+}
+
+.snippet-footer {
+  margin: 8px 0;
+  font-size: 12px;
+}
+
+.last-used {
+  color: var(--muted);
   font-size: 12px;
 }
 

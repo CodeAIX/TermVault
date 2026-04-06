@@ -10,6 +10,8 @@ declare global {
       removeSnippet: (id: string) => Promise<boolean>;
       renameGroup: (oldGroup: string, newGroup: string) => Promise<boolean>;
       searchSnippets: (query: string) => Promise<SnippetItem[]>;
+      toggleFavorite: (id: string) => Promise<boolean>;
+      recordUsage: (id: string) => Promise<boolean>;
       copySnippetContent: (content: string) => Promise<boolean>;
     };
   }
@@ -40,6 +42,8 @@ export function App() {
   const [renameNewGroup, setRenameNewGroup] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SnippetItem[] | null>(null);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showRecent, setShowRecent] = useState(false);
 
   async function refresh(): Promise<void> {
     const rows = await window.termvault.listSnippets();
@@ -63,8 +67,19 @@ export function App() {
   }, [items, groupFilter]);
 
   const displayItems = useMemo(() => {
-    return searchResults !== null ? searchResults : visible;
-  }, [searchResults, visible]);
+    let result = searchResults !== null ? searchResults : visible;
+
+    if (showRecent) {
+      result = result
+        .filter((item) => item.lastUsed)
+        .sort((a, b) => new Date(b.lastUsed || 0).getTime() - new Date(a.lastUsed || 0).getTime())
+        .slice(0, 10);
+    } else if (showFavoritesOnly) {
+      result = result.filter((item) => item.isFavorite);
+    }
+
+    return result;
+  }, [searchResults, visible, showRecent, showFavoritesOnly]);
 
   function onEdit(item: SnippetItem): void {
     setEditingId(item.id);
@@ -118,6 +133,19 @@ export function App() {
     setMessage("Copied to clipboard. Paste in terminal to run.");
   }
 
+  async function onToggleFavorite(id: string): Promise<void> {
+    const ok = await window.termvault.toggleFavorite(id);
+    if (ok) {
+      await refresh();
+      setMessage("Favorite toggled.");
+    }
+  }
+
+  async function onCopyAndRecord(id: string, content: string): Promise<void> {
+    await window.termvault.recordUsage(id);
+    await onCopy(content);
+  }
+
   async function onDelete(id: string): Promise<void> {
     await window.termvault.removeSnippet(id);
     await refresh();
@@ -142,6 +170,8 @@ export function App() {
     setGroupFilter("all");
     setSearchQuery("");
     setSearchResults(null);
+    setShowFavoritesOnly(false);
+    setShowRecent(false);
     await refresh();
     setMessage("Group renamed.");
   }
@@ -215,15 +245,37 @@ export function App() {
       <main className="panel list-panel">
         <div className="toolbar">
           <h2>Snippets</h2>
-          {!searchResults && (
-            <select value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}>
-              {groups.map((group) => (
-                <option key={group} value={group}>
-                  {group === "all" ? "All groups" : group}
-                </option>
-              ))}
-            </select>
-          )}
+          <div className="toolbar-actions">
+            {!searchResults && (
+              <select value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}>
+                {groups.map((group) => (
+                  <option key={group} value={group}>
+                    {group === "all" ? "All groups" : group}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button
+              className={`toolbar-btn ${showFavoritesOnly ? "active" : ""}`}
+              onClick={() => {
+                setShowFavoritesOnly(!showFavoritesOnly);
+                setShowRecent(false);
+              }}
+              title="Show favorites only"
+            >
+              ★
+            </button>
+            <button
+              className={`toolbar-btn ${showRecent ? "active" : ""}`}
+              onClick={() => {
+                setShowRecent(!showRecent);
+                setShowFavoritesOnly(false);
+              }}
+              title="Show recent snippets"
+            >
+              ⏱
+            </button>
+          </div>
         </div>
 
         <input
@@ -241,14 +293,31 @@ export function App() {
 
           {displayItems.map((item) => (
             <article key={item.id} className="snippet-card">
-              <div className="snippet-meta">
-                <span>{item.group}</span>
-                <span>{item.type}</span>
+              <div className="snippet-header">
+                <div className="snippet-meta">
+                  <span>{item.group}</span>
+                  <span>{item.type}</span>
+                </div>
+                <button
+                  type="button"
+                  className={`favorite-btn ${item.isFavorite ? "active" : ""}`}
+                  onClick={() => onToggleFavorite(item.id)}
+                  title={item.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                >
+                  ★
+                </button>
               </div>
               <h3>{item.name}</h3>
               <pre>{item.content}</pre>
+              <div className="snippet-footer">
+                {item.lastUsed && (
+                  <span className="last-used">
+                    Last used: {new Date(item.lastUsed).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
               <div className="actions">
-                <button type="button" onClick={() => onCopy(item.content)}>
+                <button type="button" onClick={() => onCopyAndRecord(item.content, item.id)}>
                   Copy
                 </button>
                 <button type="button" onClick={() => onEdit(item)}>

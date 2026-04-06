@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { app, BrowserWindow, clipboard, ipcMain } from "electron";
-import { addSnippet, getSnippetById, listSnippets, removeSnippet, renameGroup, searchSnippets, updateSnippet } from "./store";
+import { addSnippet, getSnippetById, listSnippets, recordUsage, removeSnippet, renameGroup, searchSnippets, toggleFavorite, updateSnippet } from "./store";
 import type { SnippetInput } from "../shared/types";
 
 const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
@@ -78,6 +78,20 @@ function registerIpc(): void {
       return [];
     }
     return searchSnippets(query);
+  });
+
+  ipcMain.handle("termvault:toggle-favorite", async (_event, id: string) => {
+    if (typeof id !== "string") {
+      return false;
+    }
+    return toggleFavorite(id);
+  });
+
+  ipcMain.handle("termvault:record-usage", async (_event, id: string) => {
+    if (typeof id !== "string") {
+      return false;
+    }
+    return recordUsage(id);
   });
 }
 

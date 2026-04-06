@@ -6,6 +6,8 @@ export interface SnippetItem {
   group: string;
   content: string;
   type: SnippetType;
+  isFavorite: boolean;
+  lastUsed?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,5 +26,7 @@ export interface TermVaultApi {
   removeSnippet: (id: string) => Promise<boolean>;
   renameGroup: (oldGroup: string, newGroup: string) => Promise<boolean>;
   searchSnippets: (query: string) => Promise<SnippetItem[]>;
+  toggleFavorite: (id: string) => Promise<boolean>;
+  recordUsage: (id: string) => Promise<boolean>;
   copySnippetContent: (content: string) => Promise<boolean>;
 }

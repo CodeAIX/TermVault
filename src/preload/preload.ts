@@ -8,6 +8,8 @@ const api: TermVaultApi = {
   removeSnippet: async (id: string) => ipcRenderer.invoke("termvault:remove", id) as Promise<boolean>,
   renameGroup: async (oldGroup: string, newGroup: string) => ipcRenderer.invoke("termvault:rename-group", oldGroup, newGroup) as Promise<boolean>,
   searchSnippets: async (query: string) => ipcRenderer.invoke("termvault:search", query) as Promise<SnippetItem[]>,
+  toggleFavorite: async (id: string) => ipcRenderer.invoke("termvault:toggle-favorite", id) as Promise<boolean>,
+  recordUsage: async (id: string) => ipcRenderer.invoke("termvault:record-usage", id) as Promise<boolean>,
   copySnippetContent: async (content: string) => ipcRenderer.invoke("termvault:copy", content) as Promise<boolean>,
 };
 
