@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { app, BrowserWindow, clipboard, ipcMain } from "electron";
-import { addSnippet, listSnippets, removeSnippet } from "./store";
+import { addSnippet, getSnippetById, listSnippets, removeSnippet, renameGroup, updateSnippet } from "./store";
 import type { SnippetInput } from "../shared/types";
 
 const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
@@ -55,6 +55,22 @@ function registerIpc(): void {
     }
     clipboard.writeText(content);
     return true;
+  });
+
+  ipcMain.handle("termvault:update", async (_event, id: string, input: SnippetInput) => {
+    if (!id || typeof id !== "string" || !input || !input.name || !input.group || !input.content) {
+      return null;
+    }
+
+    const type = input.type === "snippet" ? "snippet" : "command";
+    return updateSnippet(id, { ...input, type });
+  });
+
+  ipcMain.handle("termvault:rename-group", async (_event, oldGroup: string, newGroup: string) => {
+    if (typeof oldGroup !== "string" || typeof newGroup !== "string") {
+      return false;
+    }
+    return renameGroup(oldGroup, newGroup);
   });
 }
 

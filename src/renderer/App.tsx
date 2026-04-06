@@ -6,7 +6,9 @@ declare global {
     termvault: {
       listSnippets: () => Promise<SnippetItem[]>;
       addSnippet: (input: SnippetInput) => Promise<SnippetItem>;
+      updateSnippet: (id: string, input: SnippetInput) => Promise<SnippetItem | null>;
       removeSnippet: (id: string) => Promise<boolean>;
+      renameGroup: (oldGroup: string, newGroup: string) => Promise<boolean>;
       copySnippetContent: (content: string) => Promise<boolean>;
     };
   }
@@ -31,6 +33,10 @@ export function App() {
   const [form, setForm] = useState<FormState>(initialForm);
   const [groupFilter, setGroupFilter] = useState("all");
   const [message, setMessage] = useState("Ready");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [renameOldGroup, setRenameOldGroup] = useState("");
+  const [renameNewGroup, setRenameNewGroup] = useState("");
 
   async function refresh(): Promise<void> {
     const rows = await window.termvault.listSnippets();
@@ -53,6 +59,21 @@ export function App() {
     return items.filter((i) => i.group === groupFilter);
   }, [items, groupFilter]);
 
+  function onEdit(item: SnippetItem): void {
+    setEditingId(item.id);
+    setForm({
+      name: item.name,
+      group: item.group,
+      content: item.content,
+      type: item.type,
+    });
+  }
+
+  function cancelEdit(): void {
+    setEditingId(null);
+    setForm(initialForm);
+  }
+
   async function onSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
 
@@ -61,16 +82,28 @@ export function App() {
       return;
     }
 
-    await window.termvault.addSnippet({
+    const payload = {
       name: form.name.trim(),
       group: form.group.trim(),
       content: form.content,
       type: form.type,
-    });
+    };
+
+    if (editingId) {
+      const updated = await window.termvault.updateSnippet(editingId, payload);
+      if (!updated) {
+        setMessage("Failed to update snippet.");
+        return;
+      }
+      setEditingId(null);
+      setMessage("Snippet updated.");
+    } else {
+      await window.termvault.addSnippet(payload);
+      setMessage("Snippet saved.");
+    }
 
     setForm(initialForm);
     await refresh();
-    setMessage("Snippet saved.");
   }
 
   async function onCopy(content: string): Promise<void> {
@@ -82,6 +115,26 @@ export function App() {
     await window.termvault.removeSnippet(id);
     await refresh();
     setMessage("Snippet deleted.");
+  }
+
+  async function onRenameGroupSubmit(): Promise<void> {
+    if (!renameOldGroup.trim() || !renameNewGroup.trim()) {
+      setMessage("Please fill in both group names.");
+      return;
+    }
+
+    const ok = await window.termvault.renameGroup(renameOldGroup, renameNewGroup);
+    if (!ok) {
+      setMessage("Failed to rename group.");
+      return;
+    }
+
+    setShowRenameModal(false);
+    setRenameOldGroup("");
+    setRenameNewGroup("");
+    setGroupFilter("all");
+    await refresh();
+    setMessage("Group renamed.");
   }
 
   return (
@@ -122,9 +175,19 @@ export function App() {
           />
 
           <button type="submit" className="primary">
-            Save Snippet
+            {editingId ? "Update Snippet" : "Save Snippet"}
           </button>
+
+          {editingId && (
+            <button type="button" className="secondary" onClick={cancelEdit}>
+              Cancel
+            </button>
+          )}
         </form>
+
+        <button className="link" onClick={() => setShowRenameModal(true)}>
+          Rename Group
+        </button>
 
         <div className="status">{message}</div>
       </aside>
@@ -156,6 +219,9 @@ export function App() {
                 <button type="button" onClick={() => onCopy(item.content)}>
                   Copy
                 </button>
+                <button type="button" onClick={() => onEdit(item)}>
+                  Edit
+                </button>
                 <button type="button" className="danger" onClick={() => onDelete(item.id)}>
                   Delete
                 </button>
@@ -164,6 +230,38 @@ export function App() {
           ))}
         </div>
       </main>
+
+      {showRenameModal && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <h3>Rename Group</h3>
+            <p className="modal-hint">Change all snippets in one group to a new group name.</p>
+
+            <label>Current Group Name</label>
+            <input
+              value={renameOldGroup}
+              onChange={(e) => setRenameOldGroup(e.target.value)}
+              placeholder="e.g. git"
+            />
+
+            <label>New Group Name</label>
+            <input
+              value={renameNewGroup}
+              onChange={(e) => setRenameNewGroup(e.target.value)}
+              placeholder="e.g. git-advanced"
+            />
+
+            <div className="modal-actions">
+              <button type="button" className="primary" onClick={onRenameGroupSubmit}>
+                Rename
+              </button>
+              <button type="button" onClick={() => setShowRenameModal(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

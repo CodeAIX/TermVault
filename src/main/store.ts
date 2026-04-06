@@ -85,3 +85,49 @@ export function removeSnippet(id: string): boolean {
   writeDb(db);
   return true;
 }
+
+export function getSnippetById(id: string): SnippetItem | undefined {
+  const db = readDb();
+  return db.snippets.find((s) => s.id === id);
+}
+
+export function updateSnippet(id: string, input: SnippetInput): SnippetItem | undefined {
+  const db = readDb();
+  const item = db.snippets.find((s) => s.id === id);
+  if (!item) {
+    return undefined;
+  }
+
+  item.name = input.name.trim();
+  item.group = input.group.trim();
+  item.content = input.content;
+  item.type = input.type;
+  item.updatedAt = new Date().toISOString();
+
+  writeDb(db);
+  return item;
+}
+
+export function renameGroup(oldGroup: string, newGroup: string): boolean {
+  const db = readDb();
+  const trimmedOld = oldGroup.trim();
+  const trimmedNew = newGroup.trim();
+
+  if (trimmedOld === trimmedNew) {
+    return false;
+  }
+
+  let found = false;
+  for (const item of db.snippets) {
+    if (item.group === trimmedOld) {
+      item.group = trimmedNew;
+      found = true;
+    }
+  }
+
+  if (found) {
+    writeDb(db);
+  }
+
+  return found;
+}
