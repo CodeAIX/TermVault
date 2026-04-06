@@ -5,7 +5,7 @@
 - [x] Install Required Extensions. (No extensions needed)
 - [x] Compile the Project.
 - [x] Create and Run Task.
-- [ ] Launch the Project. (Waiting for user confirmation to start debug/launch)
+- [x] Launch the Project.
 - [x] Ensure Documentation is Complete.
 
 ## Progress Summary
@@ -15,3 +15,4 @@
 - Added build/dev/start scripts and CLI bin entry.
 - Added README with usage and GitHub publishing steps.
 - Created and executed a VS Code build task successfully.
+- Verified launch in both dev mode and built mode.
