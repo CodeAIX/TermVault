@@ -13,6 +13,8 @@ declare global {
       toggleFavorite: (id: string) => Promise<boolean>;
       recordUsage: (id: string) => Promise<boolean>;
       copySnippetContent: (content: string) => Promise<boolean>;
+      exportSnippets: () => Promise<boolean>;
+      importSnippets: (items: SnippetItem[], mode: "replace" | "merge") => Promise<boolean>;
     };
   }
 }
@@ -187,6 +189,36 @@ export function App() {
     setSearchResults(results);
   }
 
+  async function onExport(): Promise<void> {
+    try {
+      const success = await window.termvault.exportSnippets();
+      if (success) {
+        setMessage("Snippets exported successfully.");
+      } else {
+        setMessage("Export canceled.");
+      }
+    } catch (error) {
+      setMessage(`Export failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  }
+
+  async function onImport(mode: "replace" | "merge"): Promise<void> {
+    try {
+      const success = await window.termvault.importSnippets([], mode);
+      if (success) {
+        await refresh();
+        setMessage(`Snippets imported (${mode} mode).`);
+        setGroupFilter("all");
+        setSearchQuery("");
+        setSearchResults(null);
+      } else {
+        setMessage("Import canceled.");
+      }
+    } catch (error) {
+      setMessage(`Import failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  }
+
   return (
     <div className="layout">
       <aside className="panel form-panel">
@@ -237,6 +269,18 @@ export function App() {
 
         <button className="link" onClick={() => setShowRenameModal(true)}>
           Rename Group
+        </button>
+
+        <button className="link" onClick={onExport}>
+          Export All
+        </button>
+
+        <button className="link" onClick={() => onImport("merge")}>
+          Import (Merge)
+        </button>
+
+        <button className="link" onClick={() => onImport("replace")}>
+          Import (Replace)
         </button>
 
         <div className="status">{message}</div>

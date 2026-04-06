@@ -11,6 +11,8 @@ const api: TermVaultApi = {
   toggleFavorite: async (id: string) => ipcRenderer.invoke("termvault:toggle-favorite", id) as Promise<boolean>,
   recordUsage: async (id: string) => ipcRenderer.invoke("termvault:record-usage", id) as Promise<boolean>,
   copySnippetContent: async (content: string) => ipcRenderer.invoke("termvault:copy", content) as Promise<boolean>,
+  exportSnippets: async () => ipcRenderer.invoke("termvault:export") as Promise<boolean>,
+  importSnippets: async (items: SnippetItem[], mode: "replace" | "merge" = "merge") => ipcRenderer.invoke("termvault:import", mode) as Promise<boolean>,
 };
 
 contextBridge.exposeInMainWorld("termvault", api);

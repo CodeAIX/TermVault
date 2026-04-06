@@ -29,4 +29,6 @@ export interface TermVaultApi {
   toggleFavorite: (id: string) => Promise<boolean>;
   recordUsage: (id: string) => Promise<boolean>;
   copySnippetContent: (content: string) => Promise<boolean>;
+  exportSnippets: () => Promise<boolean>;
+  importSnippets: (items: SnippetItem[], mode: "replace" | "merge") => Promise<boolean>;
 }

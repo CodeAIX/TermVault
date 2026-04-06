@@ -174,3 +174,40 @@ export function recordUsage(id: string): boolean {
   writeDb(db);
   return true;
 }
+
+export function exportSnippets(): SnippetItem[] {
+  const db = readDb();
+  return db.snippets;
+}
+
+export function importSnippets(items: SnippetItem[], mode: "replace" | "merge" = "merge"): boolean {
+  if (!Array.isArray(items)) {
+    return false;
+  }
+
+  const db = readDb();
+
+  if (mode === "replace") {
+    db.snippets = items.map((item) => ({
+      ...item,
+      id: item.id || randomUUID(),
+      createdAt: item.createdAt || new Date().toISOString(),
+      updatedAt: item.updatedAt || new Date().toISOString(),
+    }));
+  } else {
+    const existingIds = new Set(db.snippets.map((s) => s.id));
+    for (const item of items) {
+      if (!existingIds.has(item.id)) {
+        db.snippets.push({
+          ...item,
+          id: item.id || randomUUID(),
+          createdAt: item.createdAt || new Date().toISOString(),
+          updatedAt: item.updatedAt || new Date().toISOString(),
+        });
+      }
+    }
+  }
+
+  writeDb(db);
+  return true;
+}

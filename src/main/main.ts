@@ -1,7 +1,8 @@
 import { join } from "node:path";
-import { app, BrowserWindow, clipboard, ipcMain } from "electron";
-import { addSnippet, getSnippetById, listSnippets, recordUsage, removeSnippet, renameGroup, searchSnippets, toggleFavorite, updateSnippet } from "./store";
-import type { SnippetInput } from "../shared/types";
+import { readFileSync, writeFileSync } from "node:fs";
+import { app, BrowserWindow, clipboard, dialog, ipcMain } from "electron";
+import { addSnippet, exportSnippets, getSnippetById, importSnippets, listSnippets, recordUsage, removeSnippet, renameGroup, searchSnippets, toggleFavorite, updateSnippet } from "./store";
+import type { SnippetInput, SnippetItem } from "../shared/types";
 
 const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 
@@ -92,6 +93,59 @@ function registerIpc(): void {
       return false;
     }
     return recordUsage(id);
+  });
+
+  ipcMain.handle("termvault:export", async (_event) => {
+    const mainWindow = BrowserWindow.getFocusedWindow();
+    if (!mainWindow) {
+      throw new Error("No active window");
+    }
+
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: "Export Snippets",
+      defaultPath: `TermVault_${new Date().toISOString().split("T")[0]}.json`,
+      filters: [{ name: "JSON Files", extensions: ["json"] }],
+    });
+
+    if (result.canceled || !result.filePath) {
+      return false;
+    }
+
+    const snippets = exportSnippets();
+    const data = JSON.stringify(snippets, null, 2);
+    writeFileSync(result.filePath, data, "utf8");
+    return true;
+  });
+
+  ipcMain.handle("termvault:import", async (_event, mode: "replace" | "merge" = "merge") => {
+    const mainWindow = BrowserWindow.getFocusedWindow();
+    if (!mainWindow) {
+      throw new Error("No active window");
+    }
+
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: "Import Snippets",
+      filters: [{ name: "JSON Files", extensions: ["json"] }],
+      properties: ["openFile"],
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return false;
+    }
+
+    try {
+      const filePath = result.filePaths[0]!;
+      const data = readFileSync(filePath, "utf8");
+      const snippets = JSON.parse(data) as SnippetItem[];
+
+      if (!Array.isArray(snippets)) {
+        throw new Error("Invalid file format: expected array of snippets");
+      }
+
+      return importSnippets(snippets, mode);
+    } catch (error) {
+      throw new Error(`Import failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
   });
 }
 
