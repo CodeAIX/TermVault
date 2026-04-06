@@ -23,5 +23,6 @@ export interface TermVaultApi {
   updateSnippet: (id: string, input: SnippetInput) => Promise<SnippetItem | null>;
   removeSnippet: (id: string) => Promise<boolean>;
   renameGroup: (oldGroup: string, newGroup: string) => Promise<boolean>;
+  searchSnippets: (query: string) => Promise<SnippetItem[]>;
   copySnippetContent: (content: string) => Promise<boolean>;
 }

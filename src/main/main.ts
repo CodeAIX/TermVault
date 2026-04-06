@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { app, BrowserWindow, clipboard, ipcMain } from "electron";
-import { addSnippet, getSnippetById, listSnippets, removeSnippet, renameGroup, updateSnippet } from "./store";
+import { addSnippet, getSnippetById, listSnippets, removeSnippet, renameGroup, searchSnippets, updateSnippet } from "./store";
 import type { SnippetInput } from "../shared/types";
 
 const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
@@ -71,6 +71,13 @@ function registerIpc(): void {
       return false;
     }
     return renameGroup(oldGroup, newGroup);
+  });
+
+  ipcMain.handle("termvault:search", async (_event, query: string) => {
+    if (typeof query !== "string") {
+      return [];
+    }
+    return searchSnippets(query);
   });
 }
 

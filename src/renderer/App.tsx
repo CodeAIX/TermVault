@@ -9,6 +9,7 @@ declare global {
       updateSnippet: (id: string, input: SnippetInput) => Promise<SnippetItem | null>;
       removeSnippet: (id: string) => Promise<boolean>;
       renameGroup: (oldGroup: string, newGroup: string) => Promise<boolean>;
+      searchSnippets: (query: string) => Promise<SnippetItem[]>;
       copySnippetContent: (content: string) => Promise<boolean>;
     };
   }
@@ -37,6 +38,8 @@ export function App() {
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameOldGroup, setRenameOldGroup] = useState("");
   const [renameNewGroup, setRenameNewGroup] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SnippetItem[] | null>(null);
 
   async function refresh(): Promise<void> {
     const rows = await window.termvault.listSnippets();
@@ -58,6 +61,10 @@ export function App() {
     }
     return items.filter((i) => i.group === groupFilter);
   }, [items, groupFilter]);
+
+  const displayItems = useMemo(() => {
+    return searchResults !== null ? searchResults : visible;
+  }, [searchResults, visible]);
 
   function onEdit(item: SnippetItem): void {
     setEditingId(item.id);
@@ -133,8 +140,21 @@ export function App() {
     setRenameOldGroup("");
     setRenameNewGroup("");
     setGroupFilter("all");
+    setSearchQuery("");
+    setSearchResults(null);
     await refresh();
     setMessage("Group renamed.");
+  }
+
+  async function onSearch(query: string): Promise<void> {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults(null);
+      return;
+    }
+
+    const results = await window.termvault.searchSnippets(query);
+    setSearchResults(results);
   }
 
   return (
@@ -195,19 +215,31 @@ export function App() {
       <main className="panel list-panel">
         <div className="toolbar">
           <h2>Snippets</h2>
-          <select value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}>
-            {groups.map((group) => (
-              <option key={group} value={group}>
-                {group === "all" ? "All groups" : group}
-              </option>
-            ))}
-          </select>
+          {!searchResults && (
+            <select value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}>
+              {groups.map((group) => (
+                <option key={group} value={group}>
+                  {group === "all" ? "All groups" : group}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
-        <div className="list">
-          {visible.length === 0 && <p className="empty">No snippets yet.</p>}
+        <input
+          type="text"
+          className="search-box"
+          placeholder="Search snippets..."
+          value={searchQuery}
+          onChange={(e) => onSearch(e.target.value)}
+        />
 
-          {visible.map((item) => (
+        <div className="list">
+          {displayItems.length === 0 && (
+            <p className="empty">{searchResults !== null ? "No matching snippets." : "No snippets yet."}</p>
+          )}
+
+          {displayItems.map((item) => (
             <article key={item.id} className="snippet-card">
               <div className="snippet-meta">
                 <span>{item.group}</span>

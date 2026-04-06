@@ -131,3 +131,21 @@ export function renameGroup(oldGroup: string, newGroup: string): boolean {
 
   return found;
 }
+
+export function searchSnippets(query: string): SnippetItem[] {
+  const db = readDb();
+  const normalized = query.toLowerCase().trim();
+
+  if (!normalized) {
+    return listSnippets();
+  }
+
+  const keywords = normalized.split(/\s+/).filter((k) => k.length > 0);
+
+  return db.snippets
+    .filter((item) => {
+      const searchText = `${item.name} ${item.group} ${item.content}`.toLowerCase();
+      return keywords.every((kw) => searchText.includes(kw));
+    })
+    .sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
+}
